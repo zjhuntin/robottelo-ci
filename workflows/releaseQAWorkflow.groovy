@@ -350,6 +350,18 @@ def createLifecycleEnvironment(body) {
 
     withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'artefact-satellite-credentials', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME']]) {
 
+        def check = [
+            "hammer --output json",
+            "--username ${env.USERNAME}",
+            "--password ${env.PASSWORD}",
+            "--server ${env.SATELLITE_SERVER}",
+            "lifecycle-environment list",
+            "--organization '${config.organization}'",
+            "--name '${config.name}'",
+        ]
+
+        output = sh "${check.join(' ')}"
+
         def cmd = [
             "hammer --output json",
             "--username ${env.USERNAME}",
@@ -361,7 +373,9 @@ def createLifecycleEnvironment(body) {
             "--prior '${config.prior}'"
         ]
 
-        sh "${cmd.join(' ')}"
+        if (output.allWhitespace) {
+          sh "${cmd.join(' ')}"
+        }
     }       
 }
 
