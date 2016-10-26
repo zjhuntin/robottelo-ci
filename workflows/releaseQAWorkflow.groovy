@@ -2,6 +2,11 @@
 
 import groovy.json.JsonSlurper
 
+stage "Check for Incomplete Bugs"
+node('rhel') {
+  checkForIncompleteBugs
+
+}
 
 stage "Create Archive Environment"
 node('rhel') {
@@ -215,9 +220,18 @@ node('rhel') {
 stage "Run Automation"
 node {
 
-  build job: 'trigger-satellite6.2', parameters: [
-    [$class: 'StringParameterValue', name: 'SATELLITE_DISTRIBUTION', value: 'INTERNAL'],
-    [$class: 'StringParameterValue', name: 'BUILD_LABEL', value: "Satellite ${snapVersion}"],
+  build job: 'satellite6-downstream-trigger', parameters: [
+    [$class: 'StringParameterValue', name: 'RHEL6_SATELLITE_URL', value: ''],
+    [$class: 'StringParameterValue', name: 'RHEL6_CAPSULE_URL', value: ''],
+    [$class: 'StringParameterValue', name: 'RHEL6_TOOLS_URL', value: ''],
+    [$class: 'StringParameterValue', name: 'RHEL7_SATELLITE_URL', value: ''],
+    [$class: 'StringParameterValue', name: 'RHEL7_CAPSULE_URL', value: ''],
+    [$class: 'StringParameterValue', name: 'RHEL7_TOOLS_URL', value: ''],
+    [$class: 'StringParameterValue', name: 'SATELLITE_VERSION', value: '6.2'],
+    [$class: 'StringParameterValue', name: 'SELINUX_MODE', value: 'enforcing'],
+    [$class: 'StringParameterValue', name: 'BUILD_LABEL', value: "Sat6.2.0-${snapVersion}"],
+    [$class: 'StringParameterValue', name: 'UPGRADE_FROM', value: '6.1'],
+    [$class: 'StringParameterValue', name: 'COMPOSE', value: '']
   ]
 
 }
@@ -290,6 +304,17 @@ def findContentView(body) {
             return versions.first()['ID'];
         }
     }
+}
+
+def checkForIncompleteBugs {
+        def cmd = [
+            './tools.rb bugzilla check-for-incomplete-bugs',
+            "--username '${config.bz_username}'",
+            "--password '${config.bz_password}'",
+            "--milestone '${config.milestone}'"
+        ]
+
+        sh "${cmd.join(' ')}"
 }
 
 def computePackageDifference(body) {
