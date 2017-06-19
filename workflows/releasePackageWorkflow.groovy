@@ -12,12 +12,12 @@ def branch_map = [
 ]
 def release_branch = env.releaseBranch
 def version_map = branch_map[release_branch]
+def repoName = gitRepository.split('/')[1]
+def releaseTag = ''
 
 node('rhel') {
 
     stage("Setup Environment") {
-
-        def repoName = gitRepository.split('/')[1]
 
         dir(repoName) {
             withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'jenkins-gitlab', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME']]) {
@@ -46,8 +46,6 @@ node('rhel') {
     }
 
     stage("Identify Bugs") {
-
-        def releaseTag = ''
 
         dir(repoName) {
             sh "../tool_belt/tools.rb release find-bz-ids --output-file bz_ids.json"
