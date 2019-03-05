@@ -13,6 +13,7 @@ def test_forklift(args) {
     runOnLibvirtHost "cd sat-deploy/forklift && git -c http.sslVerify=false fetch origin && git reset origin/master --hard"
 
     def branches = [:]
+    def os_versions_pass = [:]
 
     wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
         for (int i = 0; i < os_versions.size(); i++) {
@@ -22,6 +23,9 @@ def test_forklift(args) {
             branches["install-rhel-${item}"] = {
                 try {
                     runOnLibvirtHost "cd sat-deploy && ansible-playbook pipelines/compose_test_${satellite_version}_rhel${item}.yml -e forklift_state=up"
+                    os_versions_pass["RHEL${item}"] = true
+                } catch(Exception ex) {
+                    os_versions_pass["RHEL${item}"] = false
                 } finally {
                     runOnLibvirtHost "cd sat-deploy && ansible-playbook pipelines/compose_test_${satellite_version}_rhel${item}.yml -e forklift_state=destroy"
                 }
@@ -30,5 +34,6 @@ def test_forklift(args) {
     }
 
     parallel branches
+    return os_versions_pass
 
 }

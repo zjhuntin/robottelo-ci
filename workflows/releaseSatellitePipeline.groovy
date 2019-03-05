@@ -49,7 +49,9 @@ node('sat6-build') {
 
     stage("Test Installation") {
 
-        test_forklift(
+        def os_versions_pass = [:]
+
+        os_versions_pass = test_forklift(
             os_versions: os_versions,
             satellite_version: satellite_short_version
         )
